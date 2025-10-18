@@ -1,0 +1,129 @@
+# Map_Homework
+Zoe Sidana Bunnath
+
+## Introduction
+
+This map shows the movement of domestic cats across the United Kingdom
+using GPS data from the Cats_UK dataset. The dataset was part of a
+citizen science project where pet owners allowed their cats to wear GPS
+trackers to record their daily movements. Each record represents a
+single GPS location of a cat during the study period.
+
+For this project, I focused on the Southwest region of the UK, where
+most of the data points were collected. I selected the three cats with
+the most GPS records to make the map clear and easy to interpret. The
+map combines a watercolor basemap from Stadia Maps with cat movement
+paths drawn in distinct colors to represent individual cats.
+
+## Load the Libraries
+
+``` r
+library(tidyverse) # load tidyverse for cleaning and wrangling data
+library(ggmap) # load ggmap for downloading and visualizing basemaps
+library(here)
+```
+
+\##Load and Clean the Data
+
+``` r
+cats_uk <- readr::read_csv( # load the Cats_UK dataset from TidyTuesday’s GitHub page
+  "https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2023/2023-01-31/cats_uk.csv"
+)
+
+cats_clean <- cats_uk %>% 
+  filter(!is.na(location_long), !is.na(location_lat)) # remove any missing GPS coordinates so only valid locations remain
+```
+
+## Make a map
+
+``` r
+## Focus on the main cluster (Southwest UK)
+cats_focus <- cats_clean %>% 
+  filter(location_long > -6 & location_long < -4,   # keep cats between these longitudes
+         location_lat > 50 & location_lat < 51)     # and these latitudes where most cats were tracked
+# I focus on this range because, from the dataset’s coordinate summary, most cats are concentrated around longitude -5.3 and latitude 50.5.
+# This helps me zoom in on the area that actually has data instead of mapping the whole UK unnecessarily.
+
+
+## Identify the top 3 cats with the most GPS points
+three_cats <- cats_focus %>% 
+  count(tag_id) %>%                # count how many GPS records each cat has
+  arrange(desc(n)) %>%             # sort the cats from most to least active (based on how many points they have)
+  slice_head(n = 3) %>%            # select the top three cats with the most tracking data
+  pull(tag_id)                     # extract just their ID names so I can filter them easily later
+# I only show three cats because showing all cats at once makes the map too crowded and confusing.
+# Picking three gives a clear picture of their movement patterns without clutter.
+
+
+## Keep only the data for those 3 cats
+cats_subset <- cats_focus %>% 
+  filter(tag_id %in% three_cats)   # keep only the rows that belong to the three selected cats
+# This subset helps me focus only on the cats that have enough data points to visualize movement.
+
+
+## Quick check on how many GPS points each cat has
+cats_subset %>% count(tag_id)      # helps confirm that all three cats have enough records to show movement
+```
+
+    # A tibble: 3 × 2
+      tag_id           n
+      <chr>        <int>
+    1 Bits-Tag       867
+    2 Gracie_2-Tag   963
+    3 Teddy-Tag      791
+
+``` r
+# I use this to make sure that all three cats have several GPS readings and are not missing too much data.
+
+
+## Get a watercolor basemap from Stamen via Stadia Maps
+cat_map <- get_stadiamap(
+  bbox = c(left = -5.6, bottom = 50.1, right = -4.5, top = 50.6),  # set map boundaries slightly larger than the cat cluster area
+  zoom = 10,                                                       # adjust zoom so I can see both detail and context
+  maptype = "stamen_watercolor"                                    # use a watercolor-style background to make the map look cleaner and softer
+)
+# I use watercolor style because it gives a natural and visually appealing background that makes the points stand out nicely.
+
+
+##  Plot the cats' movements
+ggmap(cat_map) + 
+  geom_path( # connect GPS points with a line to show movement paths
+    data = cats_subset, 
+    aes(x = location_long, y = location_lat, color = factor(tag_id), group = tag_id),
+    size = 1.2,    # make the lines thick enough to be visible
+    alpha = 0.8    # slightly transparent so overlapping paths don’t look too dark
+  ) +
+  geom_point( # add dots to show the individual GPS points
+    data = cats_subset, 
+    aes(x = location_long, y = location_lat, color = factor(tag_id)),
+    size = 2,      # small size so they don’t overpower the lines
+    alpha = 0.3    # add transparency so overlapping points look lighter and easier to see
+  ) +
+  labs( # label the map for clear communication
+    title = "Movement of Three Cats in Southwest UK",  # main title of the map
+    subtitle = "Each color shows a different tracked cat",  # explains what the color means
+    x = "Longitude",  # label for the x-axis
+    y = "Latitude",   # label for the y-axis
+    color = "Cat ID"  # legend title explaining that the colors represent cat IDs
+  ) +
+  scale_color_viridis_d(option = "turbo", direction = 1) +  # use bright distinct color palette
+  coord_quickmap() +                                        # keep map aspect ratio accurate
+  theme_minimal() +                                         # clean minimal theme
+  theme(
+    plot.title = element_text(size = 15, face = "bold"),    # make the title bold and larger
+    plot.subtitle = element_text(size = 12),                # medium subtitle
+    axis.text = element_text(size = 10),                    # readable axis numbers
+    axis.title = element_text(size = 11),                   # slightly larger axis labels
+    legend.title = element_text(size = 11, face = "bold"),  # bold legend title
+    legend.text = element_text(size = 9),                   # normal-sized legend text
+    legend.position = "right"                               # move legend to the right side
+  )
+```
+
+![](output/unnamed-chunk-3-1.png)
+
+``` r
+ggsave(here("Week_07","Output","Map_homework.pdf"))
+```
+
+\`\`\`

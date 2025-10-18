@@ -85,6 +85,12 @@ ggplot(FullData_long, aes(x = mean_date, y = Value, color = Variable)) +
 
 # Make a table
 
+| Time                | Depth (m) | Salinity (PSU) | Temperature (°C) |
+|:--------------------|:----------:|:---------------:|:-----------------:|
+| _Start (11:30 UTC)_ | 0.25       | 34.0            | 29.2             |
+| _Midpoint (12:00 UTC)_ | 0.30       | 33.6            | 29.3             |
+| _End (12:30 UTC)_   | **0.32**   | **33.5**        | **30.0**         |
+
 ```{r}
 #| warning: false
 #| message: false
@@ -93,27 +99,32 @@ ggplot(FullData_long, aes(x = mean_date, y = Value, color = Variable)) +
 
 # This table highlights how each variable changes from the start to the end of the time period.
 # It shows the values at three time points (start, midpoint, and end),
-# showing the trends in the line plot.
+# making it easy to compare patterns seen in the line plot.
 
-tibble( Time_Point = c("Start (11:30 UTC)", "Midpoint (12:00 UTC)", "End (12:30 UTC)"),
+tibble(
+  Time_Point = c("Start (11:30 UTC)", "Midpoint (12:00 UTC)", "End (12:30 UTC)"),
   Depth_m = c(0.25, 0.30, 0.32),
   Salinity_PSU = c(34.0, 33.6, 33.5),
-  Temperature_C = c(29.2, 29.3, 30.0)) %>%
-  kbl(caption = "Average depth, salinity, and temperature measured at key time intervals during the one-hour period.", # short note that explains what the table shows
-     col.names = c("Time Point", "Depth (m)", "Salinity (PSU)", "Temperature (°C)"), # rename columns
-     align = "c") %>% # center all text
-kable_classic(full_width = FALSE, html_font = "Arial") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"),  # add light stripes, hover effects, and keep the table compact and flexible
-                position = "center", # center the table in the document
-                full_width = FALSE, # keep the table width balanced
-                font_size = 14) %>% # set a slightly larger font size
+  Temperature_C = c(29.2, 29.3, 30.0)
+) %>%
+  kbl(
+    caption = "Average depth, salinity, and temperature measured at key time intervals during the one-hour period.",  # short note that explains what the table shows
+    col.names = c("Time Point", "Depth (m)", "Salinity (PSU)", "Temperature (°C)"),  # rename columns
+    align = "c"  # center all text
+  ) %>%
+  kable_classic(full_width = FALSE, html_font = "Arial") %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),  # add light stripes and compact layout
+    position = "center",
+    full_width = FALSE,
+    font_size = 14
+  ) %>%
   row_spec(0, bold = TRUE, color = "white", background = "#2a5674") %>%   # deep ocean blue header
-  row_spec(3, bold = TRUE, color = "darkred", background = "#b35c44") %>%   # highlight for end time
+  row_spec(3, bold = TRUE, color = "white", background = "#b35c44") %>%   # warm terracotta for end time
   column_spec(1, background = "#f7f4ef") %>%  # light cream for time column
   column_spec(2, background = "#d9c9a3") %>%  # sand beige for depth
   column_spec(3, background = "#88a096") %>%  # misty green for salinity
   column_spec(4, background = "#e3dad0")      # soft neutral for temperature
-```
 
 @tbl-time-change shows how the three variables change over the one-hour period.
 Between 11:30 and 12:30 UTC, temperature clearly rises, while salinity slightly decreases and depth becomes a bit higher.

@@ -1,0 +1,82 @@
+---
+title: "Good Plot"
+author: "Zoe Sidana Bunnath"
+format: html
+knitr: 
+  opts_chunk: 
+    fig.path: "../output/"
+---
+
+## Introduction
+I am using long-term monitoring data on crane observations from Lake Hornborgasjön in Sweden. For more than 30 years, cranes stopping at Lake Hornborgasjön (or “Lake Hornborga”) in Västergötland have been counted from the Hornborgasjön field station during their spring and fall migrations.
+
+Using this data, I explore one main question: Has the crane population at Lake Hornborgasjön grown over the past 30 years?
+
+## Load the Libraries
+
+```{r}
+#| message: false
+#| warning: false
+
+library(dplyr)       # for data wrangling (filter, mutate, group_by, summarize)
+library(ggplot2)     # for plotting
+library(lubridate)   # for working with dates
+library(tidyr)       # for filling in missing years
+library(here)        # for creating file paths
+
+```
+## Load the Dataset
+```{r}
+#| message: false
+#| warning: false
+
+cranes <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-09-30/cranes.csv')
+
+(cranes)
+
+```
+
+## Make a Plot
+```{r}
+#| message: false
+#| warning: false
+
+# Prepare and plot the data
+cranes %>%
+  mutate(date = parse_date_time(date, orders = c("ymd", "dmy", "mdy"))) %>%  # convert date column into a proper date format, trying multiple patterns (YYYY-MM-DD, DD-MM-YYYY, MM-DD-YYYY)
+  filter(!is.na(date)) %>%                           # remove rows with invalid or missing dates
+  filter(!is.na(observations)) %>%                   # remove rows where observations are missing
+  mutate(year = year(date)) %>%                      # extract the year from the date column
+  group_by(year) %>%                                 # group the data by year
+  summarize(mean_obs = mean(observations, na.rm = TRUE)) %>%  # calculate the average (mean) number of observations per year
+  complete(year = full_seq(1994:2024, 1), fill = list(mean_obs = 0)) %>%  # ensure every year from 1994–2024 appears; if missing, fill with 0
+  ggplot(aes(x = year, y = mean_obs)) +              # start the ggplot, mapping year to x-axis and mean_obs to y-axis
+  geom_line(color = "steelblue", linewidth = 0.9) +   # draw a smooth line connecting all yearly points
+  geom_point(color = "darkblue", size = 2) +          # add small dark blue points for each year’s data
+  scale_x_continuous(breaks = seq(1994, 2024, 1)) +   # make sure every year from 1994 to 2024 appears on the x-axis
+  labs(
+    x = "Year",                                       # label for the x-axis
+    y = "Average Observations",                       # label for the y-axis
+    title = "Average Annual Crane Observations at Lake Hornborgasjön (1994–2024)"  # descriptive title
+  ) +
+  theme_minimal() +                                   # use a clean, simple visual theme
+  theme(
+    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),  # tilt x-axis labels for better readability
+    plot.title = element_text(face = "bold", size = 12)            # make the plot title bold and slightly larger
+  )
+
+# Save the plot
+ggsave(here("Week_08","Output","Good Plot.png"))
+
+```
+
+
+## Reasons Why This is a Good Plot
+
+- The line plot makes it easy to see how crane observations change from year to year, which is important for time series data.
+
+- Using one consistent color keeps the focus on the trend rather than the colors, making the graph clean and easy to read.
+
+- The connected points clearly show the rise and fall in observations over time, helping to visualize the pattern across 30 years.
+
+- The labels and title are specific, so it’s clear what the graph is showing and what the units represent.

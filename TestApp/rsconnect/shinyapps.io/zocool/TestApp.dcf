@@ -1,0 +1,12 @@
+name: TestApp
+title: TestApp
+username: zocool
+account: zocool
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 15968557
+bundleId: 11132335
+url: https://zocool.shinyapps.io/TestApp/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

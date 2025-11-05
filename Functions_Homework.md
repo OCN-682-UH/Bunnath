@@ -1,0 +1,108 @@
+# Functions_Homework
+Zoe Sidana Bunnath
+
+## Introduction
+
+I used two datasets from Tidy Tuesday — the long-term crane monitoring
+data from Lake Hornborgasjön in Sweden and the FrogID dataset from
+Australia. I created two functions: one to extract the month from a full
+date and turn it into word form, and another to plot the data to show
+the trend in average observations across months in 2023. I tested both
+functions with the crane and frog datasets to see how well they work.
+
+## Load the Libraries
+
+``` r
+library(tidyverse) # for data wrangling (filter, mutate, group_by, summarize)
+library(here) # for saving files
+```
+
+## Load the Dataset
+
+``` r
+cranes <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-09-30/cranes.csv')
+
+frogID_data = read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-09-02/frogID_data.csv")
+```
+
+## Create a Function to Extract the Month From a Full Date and Turn It Into Word Form
+
+``` r
+ymd_to_m_label <- function(data) {
+  data %>%
+    mutate(
+      year = year(date), # extract the year
+      month = month(date, label = TRUE, abbr = FALSE) # extract the date and show the month label
+    )
+}
+```
+
+## Create a Function For Plotting
+
+``` r
+myplot<-function(data, x, y){
+
+  ggplot(data, aes(x = {{x}}, y = {{y}})) +  # start the ggplot, mapping x-axis to y-axis
+    geom_col(color = "steelblue") + #column
+    labs(
+    x = "Month", #x-axis label
+    y = "Average Observations", #y-axis label
+    title = "Average Monthly Observations in 2023" #plot title
+  ) +
+  theme_minimal() #minimal theme
+}
+```
+
+## Data Wrangling
+
+``` r
+# Prepare crane data for plotting
+cranes_summary <- cranes %>%
+  filter(!is.na(date)) %>%  # drop missing dates
+  filter(!is.na(observations)) %>% # drop missing observations
+  
+# Use the function to extract the month and convert it from numeric to word form
+   ymd_to_m_label() %>% 
+  
+  filter(year == 2023) %>%  # keep only 2023 data
+  group_by(month) %>%   # group by month
+  summarize(mean_obs = mean(observations, na.rm = TRUE)) %>%  #create a new column with mean observation values
+  ungroup() # remove grouping
+ 
+#Prepare the frog data for plotting
+
+frog_data_month <- frogID_data %>%
+#Rename the column eventDate to Date in the Frog Dataset
+  rename(date = eventDate, observations = recordedBy) %>%
+  
+# Use the function to extract the month and convert it from numeric to word form
+   ymd_to_m_label() %>%  
+
+  group_by(month) %>% # group the data by month
+  mutate(mean_obs = mean(observations, na.rm = TRUE)) #create a new column with mean observation values
+```
+
+## Plot the Crane Data Using My Function
+
+``` r
+myplot(data = cranes_summary, x = month, y = mean_obs)
+```
+
+![](output/unnamed-chunk-6-1.png)
+
+## Plot the Crane Data Using My Function
+
+``` r
+myplot(data = frog_data_month, x = month, y = mean_obs)
+```
+
+![](output/unnamed-chunk-7-1.png)
+
+## Save the Plots
+
+``` r
+ggsave(here("Week_10","Output","Plot_Functions_Cranes.png"))
+ggsave(here("Week_10","Output","Plot_Functions_Frogs.png"))
+```
+
+\`\`\`

@@ -112,7 +112,7 @@ myplot(data = cranes_summary, x = month, y = mean_obs)
 myplot(data = frog_data_month, x = month, y = mean_obs)
 ```
 
-## Save the Plots
+##  Save the Plots
 
 ```{r}
 #| message: false
@@ -120,6 +120,7 @@ myplot(data = frog_data_month, x = month, y = mean_obs)
 
 ggsave(here("Week_10","Output","Plot_Functions_Cranes.png"))
 ggsave(here("Week_10","Output","Plot_Functions_Frogs.png"))
+
 
 ```
 

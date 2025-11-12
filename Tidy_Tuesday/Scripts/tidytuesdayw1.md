@@ -1,0 +1,138 @@
+# Tidy_Tuesday_Week01
+Zoe Sidana Bunnath
+
+\##Load Libraries
+
+``` r
+library(tidytuesdayR) # for loading the tidy tuesday data
+library(tidyverse) # for data wrangling + ggplot
+library(here) # for saving files
+library(PNWColors)  # for color palette  
+library(colorspace) # for adjusting colors
+```
+
+\##Load Data
+
+``` r
+#Load tidy tuesday data from November 04 2025
+
+tuesdata <- tidytuesdayR::tt_load('2025-11-04')
+```
+
+\##Tidy the Data
+
+``` r
+tuesdata #use the tidy tuesday data
+
+flint_mdeq <- tuesdata$flint_mdeq
+flint_vt <- tuesdata$flint_vt
+
+#combine the two datasets
+joined <- full_join(flint_mdeq, flint_vt, by = "sample") %>% 
+  #only keep these columns 
+  select(sample, lead.x, lead2, lead.y) %>% 
+  #change data into long format
+  pivot_longer(cols = lead.x:lead.y, #convert these cols into long format in a single col
+               names_to = "data_source", #name the new column
+               values_to = "values") #name the column that has all the values
+
+# Calculate median by data source
+  lead_median <- joined %>%
+  group_by(data_source) %>%
+  summarise(median_value = median(
+    values, na.rm = TRUE))
+
+# Join the means back to the full data
+joined_with_median <- joined %>%
+  left_join(lead_median, 
+            by = "data_source"
+            )%>% 
+  #rename the variables in the data_source column  
+  mutate( 
+    data_source = recode(data_source,
+      "lead.x" = "MDEQ",
+      "lead2"  = "MDEQ with Samples Removed",
+      "lead.y" = "Virginia Tech"
+    ))
+```
+
+\##Plot the Data
+
+``` r
+# Base plot
+g <- ggplot(
+  joined_with_median,
+  aes(x = data_source, y = values, fill = data_source, color = data_source)
+) +
+  scale_fill_manual(values = pnw_palette("Sunset", 3)) +
+  scale_color_manual(values = pnw_palette("Sunset", 3), guide = "none") +
+  labs(x = "Data Source", y = "Lead Value") +
+  theme_minimal()
+
+# Add layers
+g + 
+  geom_boxplot(
+    aes(fill = data_source, fill = after_scale(colorspace::lighten(fill, .7))),
+    size = 0.6, outlier.shape = NA
+  ) +
+  geom_point(
+    position = position_jitter(width = .1, seed = 0),
+    size = 4, alpha = .5
+  ) +
+  labs(
+  title = "Lead Concentration Levels by Data Source",
+  subtitle = "Comparison of lead samples (MDEQ vs. Virginia Tech)",
+  x = "Data Source", #y-axis title
+  y = "Lead Concentration (ppb)" #y-axis title
+) + 
+  
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(face = "bold", size = 12),
+    axis.title.x = element_text(face = "bold", size = 13),
+    axis.title.y = element_text(face = "bold", size = 13),
+    plot.title = element_text(face = "bold", size = 16, hjust = 0),
+    plot.subtitle = element_text(size = 12, hjust = 0)
+  )
+
+#Save the plot
+ggsave(here("Tidy_Tuesday","Output","Tidy_Tuesday_Week_1.png"))
+```
+
+<div id="fig-lead-levels">
+
+![](output/fig-lead-levels-1.png)
+
+Figure 1: Lead concentration levels by data source (MDEQ vs. Virginia
+Tech).
+
+</div>
+
+## Results and Intepretation
+
+As shown in <a href="#fig-lead-levels" class="quarto-xref">Figure 1</a>,
+when I looked at the first 71 samples, I noticed that the lead
+concentrations reported by Virginia Tech were much lower than those from
+MDEQ. This shows that the two datasets captured different patterns,
+possibly because of how or when the samples were collected. Since MDEQ
+only had 71 samples, removing a few of them did not really change the
+overall data pattern because the distribution stayed about the same and
+the median lead levels remained low. However, when I looked at the full
+Virginia Tech dataset with 271 samples, I saw that the later samples
+showed much higher lead concentrations. This suggests that having a
+larger dataset increases the sampling power and gives a more complete
+picture of the contamination. It could also mean that the later rounds
+of Virginia Tech sampling included more diverse households or
+conditions, which makes the data more inclusive and representative of
+the real situation.
+
+## A New Thing I learned
+
+One thing I learned from this code is how to layer the geoms in ggplot.
+I used to think you could only use one type of plot at a time, but now I
+understand that each geom adds a different piece of information. For
+example, I used geom_boxplot() to show the overall pattern of lead
+levels and added geom_point() on top to show every sample in the
+dataset. I also learned that the order of layers matters because ggplot
+draws them one by one, so the boxplot needs to go first and the points
+after to make the data more visible.

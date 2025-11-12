@@ -58,7 +58,7 @@ Learning how to create *different folders* and utilizing ***GitHub*** gives me *
 
 -   Output
 
-### Week 09. *Functional programing; How to ask for help?*
+### Week 09. *Goodplot/Badplot, and Factors*
 
 -   Data
 
@@ -66,7 +66,7 @@ Learning how to create *different folders* and utilizing ***GitHub*** gives me *
 
 -   Output
 
-### Week 10. *Intro Shiny apps; TidyTuesday Plot*
+### Week 10. *Functional programing; How to ask for help?*
 
 -   Data
 
@@ -74,7 +74,15 @@ Learning how to create *different folders* and utilizing ***GitHub*** gives me *
 
 -   Output
 
-### Week 12. *Iterative data; TidyTuesday Plot*
+### Week 11. *Intro Shiny apps; TidyTuesday Plot*
+
+-   Data
+
+-   Scripts
+
+-   [Output](https://zocool.shinyapps.io/Wind_Farm/)
+
+### Week 12. *Iterative data (loop and map functions); TidyTuesday Plot*
 
 -   Data
 

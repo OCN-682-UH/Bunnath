@@ -1,0 +1,13 @@
+name: Wind_Farm
+title:
+username: zocool
+account: zocool
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 16029659
+bundleId: 11170062
+url: https://zocool.shinyapps.io/Wind_Farm/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: EnvDCE_Shiny_Practice.R

@@ -1,0 +1,16 @@
+---
+title: "My_Shiny_App"
+author: "Zoe Sidana Bunnath"
+date: "2025-11-11"
+output: html_document
+---
+
+## My Shiny App
+
+This is my first Shiny app that presents a **sample survey** using wind farm data.\
+It shows how people make choices between different renewable energy options under various scenarios.\
+The app is a simple example that demonstrates how a survey can be displayed in an interactive way.
+
+### Access My App
+
+[**Click here to open my Shiny App**](https://zocool.shinyapps.io/Wind_Farm/){target="_blank"}

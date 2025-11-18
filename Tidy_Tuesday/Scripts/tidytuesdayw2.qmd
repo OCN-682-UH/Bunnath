@@ -1,0 +1,131 @@
+---
+title: "tidytuesdayw2"
+author: "Zoe Sidana Bunnath"
+format: html
+knitr:
+  opts_chunk:
+    fig.path: "output/"
+---
+
+## Introduction
+
+Using this the tidytuesday data of this week, I looked at patterns across six Southeast Asian countries: Cambodia, Indonesia, Malaysia, Myanmar, Singapore, and Thailand. I wanted to explore how TB severity and overall burden differ across these countries by looking at both the case fatality ratio and the mortality rate per 100 000 population.
+
+## Load Libraries
+
+```{r}
+#| message: false
+#| warning: false
+
+library(tidytuesdayR) # for loading the tidy tuesday data
+library(tidyverse) # for data wrangling + ggplot
+library(here) # for saving files
+library(viridis) # for color-blind friendly color pallete
+library(plotly) # for interactive chart
+library(htmlwidgets) #for saving the widget
+```
+
+## Load Data
+
+```{r}
+#| message: false
+#| warning: false
+
+#Load tidy tuesday data from November 04 2025
+
+tuesdata <- tidytuesdayR::tt_load('2025-11-11') #load data of the week
+
+```
+
+## Tidy the Data
+
+```{r}
+#| message: false
+#| warning: false
+head(tuesdata)
+who_tb_data <- tuesdata$who_tb_data %>%
+
+ #use the tidy tuesday data 
+  #only keep these rows
+  filter( year ==2023, country %in% c("Cambodia", "Thailand", "Myanmar","Malaysia","Indonesia","Singapore"))  %>%
+  #only keep these columns
+select(country, #Country
+       year, #Year of observation
+       cfr, #Estimated TB case fatality ratio
+       e_mort_100k, #Estimated mortality of TB cases (all forms) per 100 000 population
+       e_pop_num) #Estimated total population number
+
+head(who_tb_data)
+
+```
+
+## Plot the Data
+
+```{r}
+#| message: false
+#| warning: false
+#| label: fig-tb-sea
+#| fig-cap: "A Look at TB Severity and Mortality in Cambodia, Indonesia, Malaysia, Myanmar, Singapore, and Thailand "
+
+ # Interactive Plot
+p <- who_tb_data %>%
+  mutate(pop=round(e_pop_num/1000000,2)) %>%
+  
+  # Reorder countries to having big bubbles on top
+  arrange(desc(pop)) %>%
+  mutate(country = factor(country, country)) %>%
+  
+  # Prepare text for tooltip
+  mutate(text = paste(
+    "Country: ", country, 
+    "\nPopulation (M): ", pop, 
+    "\nEstimated mortality of TB cases (all forms) per 100 000 population: ", e_mort_100k,
+    "\nEstimated TB case fatality ratio: ", cfr,
+    "\nYear: ", year
+     )
+    ) %>%
+  
+  # ggplot
+  ggplot( aes(
+              x=cfr, 
+              y=e_mort_100k, 
+              size = pop, 
+              color = country, 
+              text=text
+              )
+          ) +
+    geom_point(alpha=0.9) +
+    labs(
+         title = "TB Severity and Mortality by Country in Southeast Asia (2023)",
+         x = "Case Fatality Ratio",
+         y = "Mortality per 100,000 population",
+         size = "Population"
+         ) +
+    scale_size(range = c(1.4, 19), name="Population (M)") +
+    scale_color_viridis(discrete=TRUE, guide=FALSE) +
+    theme_bw() +
+    theme(legend.position="none") #no legend
+
+# turn ggplot interactive with plotly
+pp <- ggplotly(p, tooltip="text")
+pp
+
+# save the widget
+#library(htmlwidgets)
+#saveWidget(pp, file=paste0( getwd(), "/HtmlWidget/ggplotlyBubblechart.html"))
+
+#Save the widget
+saveWidget(
+  pp, here("Tidy_Tuesday", "Output", "tidytuesdayw2.html")
+)
+```
+
+## Results and Intepretation
+
+As shown in @fig-tb-sea, I explored tuberculosis patterns across Cambodia, Indonesia, Malaysia, Myanmar, Singapore, and Thailand in 2023. By plotting the case fatality ratio and the mortality rate per 100 000 population together, I was able to see how TB severity and overall burden differ across these countries. Some countries had higher mortality rates even when their fatality ratios were relatively low, which made me think about how population size and reporting differences might influence these numbers. The bubble sizes also helped me visualize which countries have larger populations and how that shapes the total burden.
+
+## A New Things I Learned
+
+One new thing I learned this week is how to make an interactive bubble plot using ggplot and ggplotly. Before this, I mostly used simple static plots, so it was exciting to learn how to map multiple variables at the same time and turn the plot into something interactive. Being able to hover over each bubble and see more information such as total population, mortality rate, fatality ratio of each country, and year made the plot feel more meaningful. 
+
+Another thing I learned is how to use scale_size() to control the bubble sizes in my plot. I could adjust the size range and rename the legend, and doing this made it much easier to show population differences in a clear and meaningful way.

@@ -1,0 +1,60 @@
+---
+title: "for_loops_lecture"
+author: "Zoe Sidana Bunnath"
+format: html
+editor: visual
+---
+```{r}
+# Load Libraries
+library(tidyverse)
+library(purrr)
+library(here)
+```
+
+```{r}
+print(paste("The year is", 2000))
+
+years<-c(2015:2021)
+for (i in years){ #set up the for loop where i is the index
+  print(paste("The year is", i)) #loop over i
+}
+
+year_data<-tibble(year = rep(NA))
+
+```
+
+```{r}
+raw_data<-read_csv(paste0(CondPath,"/",files[1])) # test by reading in the first file and see if it works
+head(raw_data)
+
+testdata<-read_csv(here("Week_13", "data", "cond_data","011521_CT316_1pcal.csv"))
+glimpse(testdata)
+
+# point to the location on the computer of the folder
+CondPath<-here("Week_13", "data", "cond_data")
+# list all the files in that path with a specific pattern
+# In this case we are looking for everything that has a .csv in the filename
+# you can use regex to be more specific if you are looking for certain patterns in filenames
+files <- dir(path = CondPath,pattern = ".csv")
+files
+```
+```{r}
+# map functions
+# Let's calculate the mean from a set of random numbers and do it 10 times
+
+1:10 %>% # a vector from 1 to 10 (we are going to do this 10 times) %>% # the vector to iterate over
+  map(rnorm, n = 15)  %>% # calculate 15 random numbers based on a normal distribution in a list 
+  map_dbl(mean) # calculate the mean. It is now a vector which is type "double"
+
+
+CondPath<-here("Week_13", "data", "cond_data")
+files <- dir(path = CondPath,pattern = ".csv")
+files
+
+data<-files %>%
+  set_names() %>% # set's the id of each list to the file name
+  map_df(read_csv,.id = "filename") # map everything to a dataframe and put the id in a column called filename
+
+
+```
+

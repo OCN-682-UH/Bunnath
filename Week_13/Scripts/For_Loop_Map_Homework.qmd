@@ -1,0 +1,88 @@
+---
+title: "Homework_For_Loops_Maps"
+author: "Zoe Sidana Bunnath"
+format: gfm
+prefer-html: true
+knitr:
+  opts_chunk:
+    fig.path: "output/"
+---
+
+## Introduction
+
+```{r}
+# Instruction
+You have a set of 4 .csv files in data/homework. Each of these files is a timeseries of temperature and light data collected in tide pools in Oregon by Jenn Fields. Your goal is to bring in all 4 files and calculate the mean and standard deviation of both temperature (Temp.C) and light (Intensity.lux) for each tide pool. Use both a for loop and map() functions in your script. (Basically, do it twice).
+```
+
+
+## Load Libraries
+
+```{r}
+library(tidyverse) # for data wrangling
+library(here) # for file path
+library(purrr) # for map function
+```
+
+## Using For Loop Function
+```{r}
+#point to the location on the computer of the folder
+TidePool<-here("Week_13", "data", "homework")
+
+# list all the files in that path with a specific pattern
+files <- dir(path = TidePool,pattern = ".csv")
+files
+
+# pre-allocate space
+# make an empty dataframe that has one row for each file and 3 columns
+tp_data <-tibble(filename = rep(NA, length(files)), # column name for the filename
+
+                  mean_temp_c = rep(NA, length(files)), # column name for the mean temperature (Temp.C) 
+                  sd_temp_c = rep(NA, length(files)), # column name for the sd temperature (Temp.C) 
+                  mean_light = rep(NA, length(files)), # column name for the mean light (Intensity.lux)
+                  sd_light = rep(NA, length(files)) # column name for the sd light (Intensity.lux)
+) # column name for the year name
+
+for (i in 1:length(files)){ # loop over 1:4 the number of files
+  
+  data1<-read_csv(paste0(TidePool,"/",files[i]))
+  #glimpse (data1)
+tp_data$filename[i]<-files[i]
+tp_data$mean_temp_c[i]<-mean(data1$Temp.C, na.rm =TRUE) # calculate mean of temperature (Temp.C)
+tp_data$sd_temp_c[i]<-sd(data1$Temp.C, na.rm =TRUE) # calculate standard deviation of temperature (Temp.C)
+tp_data$mean_light[i]<-mean(data1$Intensity.lux, na.rm =TRUE) # calculate mean of light (Intensity.lux)
+tp_data$sd_light[i]<-sd(data1$Intensity.lux, na.rm =TRUE) # calculate standard deviation of light (Intensity.lux)
+}
+
+tp_data
+
+# Save the data into csv
+write.csv(tp_data, here("Week_13", "Output", "Tidepool_forloop.csv"))
+```
+
+# Using Map Function
+```{r}
+#Bring in files using map() function instead of a for loop function
+
+
+# point to the location on the computer of the folder
+
+files<- dir(path =TidePool, pattern = ".csv", full.names = TRUE)
+
+files
+
+data2<- files %>%
+  set_names() %>% # set's the id of each list to the file name
+  map_df(read_csv,.id = "filename") %>% #map everything to a dataframe and put the id in a column called filename
+  group_by(filename) %>%
+  summarise(mean_temp_c = mean(Temp.C, na.rm = TRUE), # calculate mean of temperature (Temp.C)
+            sd_temp_c = sd(Temp.C, na.rm = TRUE), # calculate standard deviation of temperature (Temp.C)
+            mean_light = mean(Intensity.lux, na.rm = TRUE), # calculate mean of light (Intensity.lux)
+            sd_light = sd(Intensity.lux, na.rm = TRUE)) # calculate standard deviation of light (Intensity.lux)
+data2
+  
+# Save the data into csv
+write.csv(data2, here("Week_13", "Output", "Tidepool_map.csv"))
+```
+
+

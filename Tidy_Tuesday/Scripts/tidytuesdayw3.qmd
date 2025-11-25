@@ -1,0 +1,106 @@
+---
+title: "tidytuesdayw3"
+author: "Zoe Sidana Bunnath"
+format: html
+knitr:
+  opts_chunk:
+    fig.path: "output/"
+---
+
+## Introduction
+
+Using this the tidytuesday data of this week, I explored the complete line-by-line text of the Sherlock Holmes stories and novels, made available through the {sherlock} R package by Emil Hvitfeldt. The dataset includes the full collection of Holmes texts, organized by book and line number, and is ideal for stylometry, sentiment analysis, and literary exploration.
+
+I want to visualize the counts of positive and negative words in the books across the stories. 
+
+## Load Libraries
+
+```{r}
+#| message: false
+#| warning: false
+
+library(tidytuesdayR) # for loading the tidy tuesday data
+library(tidyverse) # for data wrangling + ggplot
+library(here) # for saving files
+library(sherlock)
+library(tidytext) # for mining and tidying text
+
+```
+
+## Load Data
+
+```{r}
+#| message: false
+#| warning: false
+
+#Load tidy tuesday data from November 18 2025
+
+tuesdata <- tidytuesdayR::tt_load('2025-11-18') #load data of the week
+
+```
+
+## Tidy the Data
+
+```{r}
+#| message: false
+#| warning: false
+
+holmes <- tuesdata$holmes %>% # get all of Holmes's books
+  group_by(book)%>%
+  mutate(chapter = cumsum(str_detect(text, regex("^chapter [\\divxlc]", # count the chapters (starts with the word chapter followed by a digit or roman numeral)
+  ignore_case = TRUE)))) %>% #ignore lower or uppercase
+  
+  ungroup() # ungroup it so we have a dataframe again
+
+head(holmes)
+
+# tidy data for text mining by only keeping one word in each row
+tidy_books <- holmes %>%
+  unnest_tokens(output = word, input = text) # add a column named word, with the input as the text column
+
+head(tidy_books)
+
+```
+
+## Sentiment analysis
+```{r}
+
+sent_word_counts <- tidy_books %>%
+  inner_join(get_sentiments()) %>% # only keep positive or negative words
+  count(book, word, sentiment, sort = TRUE) # count them
+head(sent_word_counts)[1:3,]
+```
+
+## Plot the data
+
+```{r}
+sent_word_counts %>%
+  filter(n > 35) %>% # take only if there are over 50 instances of it
+  mutate(n = ifelse(sentiment == "negative", -n, n)) %>% # add a column where if the word is negative make the count negative
+  mutate(word = reorder(word, n)) %>% # sort it so it goes from largest to smallest
+  ggplot (aes(x=word, y=n)) +
+  geom_segment( aes(x=word, xend=word, y=1, yend=n), color="grey") +
+  geom_point( color="purple", size=4) +
+  theme_light() +
+  labs(title = "Top Word Contributions Across Sherlock Holmes Books") +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 18), # plot title
+    panel.grid.major.x = element_blank(),
+    panel.border = element_blank(),
+    axis.ticks.x = element_blank()
+  ) + 
+  coord_flip() +
+  facet_wrap(~ book, scales = "free_y") +
+  xlab("") +
+  ylab("Contribution to sentiment")
+```
+
+## Save the plot
+```{r}
+ggsave(here("Tidy_Tuesday", "Output", "Tidy_Tuesday_Week_3.png"), width = 12, height = 10, dpi = 300)
+```
+
+## A New Things I Learned
+
+This week I learned how to create a clean and effective lollipop plot in ggplot2 by combining geom_segment() and geom_point(), and it helped me see how much clearer my visualizations can be compared to standard bar charts.
+

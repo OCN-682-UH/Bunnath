@@ -1,0 +1,131 @@
+---
+title: "tidytuesdayw4"
+author: "Zoe Sidana Bunnath"
+format: html
+---
+
+## Introduction
+
+Using this the tidytuesday data of this week, I explored the World Bank data on statistical performance of countries. The dataset cover 99 percent of the world population and extend from 2016-2023.
+
+I want to visualize the data of the countries in the East Asia & Pacific region in order to explore the relationship between statistical performance and a country's income level or population in 2017 to 2023. 
+
+## Load Libraries
+
+```{r}
+#| message: false
+#| warning: false
+
+library(tidytuesdayR) # for loading the tidy tuesday data
+library(tidyverse) # for data wrangling + ggplot
+library(here) # for saving files
+library(viridis) # for color-blind friendly color pallete
+library(plotly) # for interactive chart
+library(htmlwidgets) #for saving the widget
+library(gganimate) #for plot animation
+
+```
+
+## Load Data
+
+```{r}
+#| message: false
+#| warning: false
+
+#Load tidy tuesday data from November 25 2025
+
+tuesdata <- tidytuesdayR::tt_load('2025-11-25') #load data of the week
+
+spi_indicators <- tuesdata$spi_indicators
+head(spi_indicators)
+
+```
+
+## Tidy the Data
+
+```{r}
+#| message: false
+#| warning: false
+
+eap_spi<-spi_indicators %>% 
+  filter(year %in% 2017:2023, region == "East Asia & Pacific") %>% #only keep these rows
+#only keep these columns
+select(region, #Region
+       country, #Country
+       year, #Year of observation
+       income, #Income level of country
+       population, #Population of the country
+       overall_score) #Overall statistical performance score
+
+head(eap_spi)
+
+```
+
+
+## Plot the data
+
+```{r}
+#| message: false
+#| warning: false
+#| label: fig-eap-spi
+#| fig-cap: "A Look at the relationship between statistical performance and income level of countries in the East-Asia and Pacific Region "
+
+ 
+# Prepare the data for the interactive plot
+eap_spi_anim <- eap_spi %>%
+  mutate(
+    pop = round(population / 1e6, 2),  # convert population to millions
+    
+    # Text that will show up when hovering over each bubble
+    text = paste(
+      "Country: ", country,
+      "<br>Population (M): ", pop,
+      "<br>Income level: ", income,
+      "<br>Overall SPI score: ", overall_score,
+      "<br>Year: ", year
+    )
+  )
+
+# Create animated and interactive plot
+p <- plot_ly(
+  data = eap_spi_anim,
+  x = ~overall_score, # x-axis: SPI score
+  y = ~population,    # y-axis: population
+  frame = ~year,  # animate by year
+  type = "scatter",
+  mode = "markers",
+  size = ~pop,  # bubble size based on population
+  sizes = c(20, 80), # control min and max bubble size
+  color = ~country,
+  text = ~text,
+  hoverinfo = "text"
+) %>%
+  layout(
+    title = "Statistical Performance and Income in East Asia and Pacific (2017–2023)",
+    xaxis = list(title = "Overall statistical performance score"),
+    yaxis = list(title = "Income level"),
+    showlegend = FALSE  # turn off legend 
+  ) %>%
+  animation_opts(
+    frame = 1000,   # how fast the animation moves
+    easing = "linear",
+    redraw = FALSE
+  ) %>%
+  animation_slider(
+    currentvalue = list(prefix = "Year: ")
+  )
+
+p
+```
+
+## Save the plot
+```{r}
+#Save the widget
+saveWidget(
+  p, here("Tidy_Tuesday", "Output", "tidytuesdayw4.html")
+)
+```
+
+## A New Things I Learned
+With this Tidy Tuesday dataset, I learned how to animate a plot with the plotly package while keeping it interactive. I used the frame argument to show how the data changes over time, and at the same time I could still hover and zoom to explore the details. Watching the bubble plot transition by year helped me better understand patterns in population and statistical performance instead of only looking at a single year
+

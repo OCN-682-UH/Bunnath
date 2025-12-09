@@ -1,0 +1,96 @@
+---
+title: "tidytuesdayw5"
+author: "Zoe Sidana Bunnath"
+format: html
+knitr:
+  opts_chunk:
+    fig.path: "output/"
+---
+
+## Introduction
+
+Using this the tidytuesday data of this week, I checked the burn duration of our snowman against the average summer temperature over the last 10 years. 
+
+## Load Libraries
+
+```{r}
+#| message: false
+#| warning: false
+
+library(tidytuesdayR) # for loading the tidy tuesday data
+library(tidyverse) # for data wrangling + ggplot
+library(here) # for saving files
+library(viridis) # for color-blind friendly color pallete
+
+```
+
+## Load Data
+
+```{r}
+#| message: false
+#| warning: false
+
+#Load tidy tuesday data from November 25 2025
+
+tuesdata <- tidytuesdayR::tt_load('2025-12-02') #load data of the week
+
+sechselaeuten <- tuesdata$sechselaeuten
+head(sechselaeuten)
+
+```
+
+## Tidy the Data
+
+```{r}
+#| message: false
+#| warning: false
+
+hotsnowman<-sechselaeuten %>% 
+  filter(year %in% 2015:2025, #only keep these rows
+         !is.na(duration) #only rows with a duration value
+         )%>% 
+#only keep these columns
+select(year, #Year of Sechselauten festival
+       duration, #Time elapsed from ignition of Boeoeg effigy until explosion, in minutes.
+       record) #Years with average summer temperature above 19 degrees Celsius.
+
+head(hotsnowman)
+
+```
+
+
+## Plot the data
+
+```{r}
+#| message: false
+#| warning: false
+#| label: hot-snowman
+#| fig-cap: "Our Snowman and the Average Temperature of the Summer (2015-2025)"
+
+
+hotsnowman %>% 
+  ggplot(aes(x = factor(year), #x-axis
+             y = duration, # y-axis
+             fill = record)) + # fill the color
+  geom_col() + # bar plot
+  scale_fill_viridis_d(
+    option = "A", #change the color palette to viridis option A for a good contrasting color
+    labels = c("Normal Summer", "Record Hot") #rename the legend from FALSE = Normal Summer and True = Record Hot
+  ) +
+  labs(
+    title = "Snowman Burn Duration by Year, Highlighting Hot Summers", #title of the plot
+    x = "Year", #a-xis title
+    y = "Burn Duration (minutes)", #y-axis title
+    fill = "Summer Temperature" #legend title
+  ) +
+  theme_minimal() #minimal theme
+```
+
+## Save the plot
+```{r}
+ggsave(here("Tidy_Tuesday","Output","Tidy_Tuesday_Week_5.png"))
+```
+
+## New Things I Learned
+
+One new thing I learned this week is how to change the viridis color palette using option = "A". Before this, I always just used the default setting without really thinking about it. Trying option A made my bar chart look a lot nicer and helped me see the difference between normal summers and record hot summers more clearly with black and yellow contrast. I also learned how to rename the legend directly inside scale_fill_viridis_d(). Before this, I usually changed the legend labels by recoding the variable first. For example, using hotsnowman2 <- hotsnowman %>% mutate(record = ifelse(record == TRUE, "Record Hot", "Normal Summer")). So, doing it inside the scale function was new for me.
